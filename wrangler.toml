@@ -1,0 +1,5 @@
+name = "rejeite-falsos-digitos"
+compatibility_date = "2025-05-13"
+
+[site]
+bucket = "./src"
