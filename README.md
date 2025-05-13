@@ -68,6 +68,8 @@ Define os temas visuais disponíveis no jogo.
    - [x] Suporte de temas
    - [ ] Temas num arquivo separado (files/themes.json)
    - [ ] !ANIMAÇÕES DE TRANSIÇÃO ENTRE NÍVEIS
+   - [ ] **!BUG = Não conseguir passar de fase enquanto o texto da descrição está sendo escrito (pois a animação trava a main thread)**
+   - [ ] **Implementar uma animação no css, workers, ou qualquer coisa pra não travar a main thread e permitir o avanço do jogador**
 
 ### Respostas aceitáveis
 O sistema aceita:
