@@ -1,0 +1,64 @@
+{
+    "levels": [
+        {
+            "id": 1,
+            "title": "",
+            "x": 0,
+            "y": 0,
+            "completed": false,
+            "unlocked": true,
+            "connections": [],
+            "puzzle": {
+                "description": "Se essa mensagem chegou até você, então eles me localizaram.\nO silêncio agora é minha única proteção. Preciso desaparecer... por enquanto.\nDurante esse tempo, darei forma ao que poderá ser nossa última esperança.\nVou tentar me comunicar de formas menos convencionais, pra eles não conseguirem me achar.\n\nSe você acredita ter a força necessária para se unir à resistência, digite: #NovoUnderground\nMas saiba: ao atravessar esse limiar, estará por sua conta. Sem nenhuma ajuda.\n\nBoa sorte.\n– rfd",
+                "image": null,
+                "answer": "#NovoUnderground",
+                "alternativeAnswers": [
+                    {
+                        "answer": "#NovoUnderground",
+                        "unlocks": [2],
+                        "message": "!"
+                    }
+                ],
+                "hint": "Digite #NovoUnderground para continuar"
+            }
+        },
+        {
+            "id": 2,
+            "title": "",
+            "x": 0,
+            "y": -100,
+            "completed": false,
+            "unlocked": false,
+            "connections": [],
+            "puzzle": {
+                "description": "",
+                "image": "files/logo.png",
+                "answer": "silêncio",
+                "alternativeAnswers": [
+                    {
+                        "answer": "silêncio",
+                        "unlocks": [3],
+                        "message": "!"
+                    }
+                ],
+                "hint": "A resposta é 'silêncio'"
+            }
+        },
+        {
+            "id": 3,
+            "title": "",
+            "x": 0,
+            "y": -200,
+            "completed": false,
+            "unlocked": false,
+            "theme": "hidden-image",
+            "connections": [],
+            "puzzle": {
+                "description": "<a href='files/background.png' class='invisivel' download='pfp.png'><p style='color: transparent;'>a resistência se identifica assim</p></a>",
+                "image": null,
+                "answer": null,
+                "hint": null
+            }
+        }
+    ]
+}
