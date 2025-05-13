@@ -2,6 +2,7 @@
 
 ## Visão Geral
 O arquivo `app.js` gerencia a lógica do jogo.
+
 O arquivo `levels.json` lista os níveis do jogo.  
 
 ## Estrutura Principal
