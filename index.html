@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading-screen">
+        <div class="loading-content">
+            <!-- <div class="loading-title">RFD</div> -->
+            <div class="loading-spinner"></div>
+            <div class="loading-footer">
+                <a href="#">Rejeite</a>
+                <a href="#">Falsos</a>
+                <a href="#">Digitos</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="game-frame">
+            <div class="main-content">
+                <div class="nav">
+                    <div class="nav-left">
+                        <!-- <a href="#">Web</a>
+                        <a href="#">Images</a>
+                        <a href="#">Videos</a>
+                        <a href="#">Maps</a>
+                        <a href="#">News</a>
+                        <a href="#">Shopping</a>
+                        <a href="#">Gmail</a> -->
+                        <a href="https://www.instagram.com/savanteindie/" target="_blank">Instagram</a>
+                        <a href="https://x.com/Ellod_" target="_blank">Twitter</a>
+                        <a href="https://www.youtube.com/@savante4501" target="_blank">Youtube</a>
+                        <a href="https://open.spotify.com/artist/5C2ZqhZuBz9iZONYCKoHme?si=orfgM0F4QsiRcf1UqRwZZw&dl_branch=1" target="_blank">Spotify</a>
+                    </div>
+                    <div class="nav-right">
+                        <div class="window-control">
+                            <div class="button close"></div>
+                            <div class="button minimize"></div>
+                            <div class="button maximize"></div> 
+                          </div>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <div class="map">
+                        <div class="levels" id="levels-container"></div>
+                    </div>
+                </div>
+                <div id='puzzleContainer' class="puzzle-container">
+                    
+                    <div class="logo"></div>
+                    <div class="puzzle-image-container" style="text-align: center; margin-top: 20px;"></div>
+                    <h2 class="puzzle-title">Título</h2>
+                    <p class="puzzle-description">Descrição</p>
+                    <img class="puzzle-image" src="" style="display: none;">
+                    
+                    <div class="puzzle-input-container">
+                        <input type="text" class="puzzle-input" placeholder="Digite...">
+                    </div>
+                    
+                    <div class="puzzle-buttons">
+                        <button class="puzzle-submit submit-button">Enviar</button>
+                        <button class="puzzle-submit" id="puzzle-hint">(Não) Estou com sorte</button>
+                    </div>
+                </div>
+                <div class="footer"></div>
+                <div class="message">
+                    <p class="message-text">Mensagem</p>
+                    <button class="message-ok">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>  
+
+    <script src="app.js"></script>
+    <script src="levels.json" type="application/json" id="levels-data"></script>
+
+</body>
+</html>
