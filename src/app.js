@@ -65,6 +65,7 @@ function getVisibleLevels() {
         }
     });
     
+    
     let depth = 0;
     while (queue.length > 0 && depth < 3) {
         const currentLevel = queue.shift();
@@ -100,6 +101,10 @@ async function loadLevels() {
             });
             gameData.currentLevel = parsedData.currentLevel || 1;
         }
+
+        // ✅ Chamada correta — DEIXE AQUI MESMO:
+        markTerminalLevelsAsCompleted();
+
     } catch (error) {
         console.error('Error loading levels:', error);
     }
@@ -107,6 +112,21 @@ async function loadLevels() {
 
 function saveGameData() {
     localStorage.setItem('enigmaGameData', JSON.stringify(gameData));
+}
+
+function markTerminalLevelsAsCompleted() {
+    gameData.levels.forEach(level => {
+        if (
+            level.unlocked &&
+            !level.completed &&
+            (!level.puzzle || (
+                (!level.puzzle.answer || level.puzzle.answer.trim() === "") &&
+                (!level.puzzle.alternativeAnswers || level.puzzle.alternativeAnswers.length === 0)
+            ))
+        ) {
+            level.completed = true;
+        }
+    });
 }
 
 function unlockConnectedLevels(level) {
@@ -169,28 +189,38 @@ function advanceToNextLevel() {
 
 function checkAnswer() {
     const level = gameData.levels.find(l => l.id === gameData.currentLevel);
-    const input = document.querySelector('.puzzle-input').value.trim().toLowerCase();
-    
-    if (!level) return;
-    
-    if (level.puzzle?.alternativeAnswers) {
-        for (const alt of level.puzzle.alternativeAnswers) {
-            if (input === alt.answer.toLowerCase()) {
-                level.completed = true;
-                unlockConnectedLevels(level);
-                showCorrectMessage(alt.message || "Path unlocked!");
-                return;
-            }
-        }
-    }
-    
-    if (input === level.puzzle.answer.toLowerCase()) {
+    const input = normalize(document.querySelector('.puzzle-input').value);
+
+    if (!level || !input) return;
+
+    // Verifica se há alternativa correta
+    const matchedAlt = level.puzzle?.alternativeAnswers?.find(alt => normalize(alt.answer) === input);
+
+    if (matchedAlt) {
         level.completed = true;
-        unlockConnectedLevels(level);
-        showCorrectMessage("Correct answer!");
-    } else {
-        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+
+        matchedAlt.unlocks.forEach(id => {
+            const unlockedLevel = gameData.levels.find(l => l.id === id);
+            if (unlockedLevel) unlockedLevel.unlocked = true;
+        });
+
+        saveGameData();
+        showCorrectMessage(matchedAlt.message || "Desbloqueado!");
+        return;
     }
+
+    // Verifica se a resposta principal está correta
+    if (normalize(level.puzzle?.answer || '') === input) {
+        level.completed = true;
+
+        unlockConnectedLevels(level); // desbloqueia conexões principais
+        saveGameData();
+        showCorrectMessage("Resposta correta!");
+        return;
+    }
+
+    // Resposta errada
+    window.location.href = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
 }
 
 function showCorrectMessage(text) {
@@ -238,28 +268,54 @@ function showPuzzleScreen(level) {
     const puzzleDescription = document.querySelector('.puzzle-description');
     const puzzleInputContainer = document.querySelector('.puzzle-input-container');
     const puzzleButtons = document.querySelector('.puzzle-buttons');
+    const submitButton = document.querySelector('.puzzle-submit');
+    const hintButton = document.querySelector('#puzzle-hint');
     
-    if (level.theme === 'hidden-image') {
+    // Controla exibição do input e botão enviar
+    if (level.hideInput || level.theme === 'hidden-image') {
         puzzleInputContainer.style.display = 'none';
-        puzzleButtons.style.display = 'flex';
+        if (submitButton) submitButton.style.display = 'none';
     } else {
         puzzleInputContainer.style.display = '';
+        if (submitButton) submitButton.style.display = '';
+    }
+    
+    // Controla exibição dos botões
+    if (level.hideInput && !level.hideHintButton) {
+        // Se esconder input mas não o botão hint, centraliza o botão hint
+        puzzleButtons.style.display = 'flex';
+        puzzleButtons.style.justifyContent = 'center';
+        if (hintButton) hintButton.style.margin = '0 auto';
+    } else if (level.theme === 'hidden-image') {
+        puzzleButtons.style.display = 'flex';
+    } else {
         puzzleButtons.style.display = '';
+        puzzleButtons.style.justifyContent = '';
+        if (hintButton) hintButton.style.margin = '';
     }
     
     puzzleTitle.textContent = level.title || '';
     
     const puzzleLogo = document.querySelector('.puzzle-container .logo');
     if (puzzleLogo) {
-        puzzleLogo.innerHTML = '';
-        const logoImg = document.createElement('img');
-        logoImg.src = 'files/logo.png';
-        logoImg.style.display = 'block';
-        logoImg.style.margin = '0 auto';
-        logoImg.style.maxWidth = '100%';
-        logoImg.style.height = 'auto';
-        puzzleLogo.appendChild(logoImg);
-        if (level.id === 1) {logoImg.style.display = 'none'}
+        if (level.hideLogo) {
+            // Oculta o logo completamente
+            puzzleLogo.style.display = 'none';
+        } else {
+            puzzleLogo.innerHTML = '';
+            const logoImg = document.createElement('img');
+            logoImg.src = 'files/logo.png';
+            logoImg.style.display = 'block';
+            logoImg.style.margin = '0 auto';
+            logoImg.style.maxWidth = '100%';
+            logoImg.style.height = 'auto';
+            puzzleLogo.appendChild(logoImg);
+            puzzleLogo.style.display = '';
+            
+            if (level.id === 1) {
+                logoImg.style.display = 'none';
+            }
+        }
     }
     
     puzzleDescription.innerHTML = '';
@@ -281,6 +337,130 @@ function showPuzzleScreen(level) {
     
     typeWriter();
     
+    const imageContainer = document.querySelector('.puzzle-image-container');
+    imageContainer.innerHTML = '';
+
+    if (level.puzzle.image) {
+        // Verifica se é um arquivo para download (extensões como .txt, .pdf, .doc, etc.)
+        const fileExtensions = ['.txt', '.pdf', '.doc', '.docx', '.zip', '.rar', '.json', '.xml', '.csv'];
+        const isDownloadableFile = fileExtensions.some(ext => level.puzzle.image.toLowerCase().endsWith(ext));
+        
+        if (isDownloadableFile) {
+            // Criar container para o arquivo
+            const fileContainer = document.createElement('div');
+            fileContainer.style.display = 'flex';
+            fileContainer.style.flexDirection = 'column';
+            fileContainer.style.alignItems = 'center';
+            fileContainer.style.justifyContent = 'center';
+            fileContainer.style.padding = '20px';
+            fileContainer.style.cursor = 'pointer';
+            fileContainer.style.borderRadius = '10px';
+            fileContainer.style.transition = 'all 0.3s ease';
+            fileContainer.style.border = '2px dashed #ccc';
+            fileContainer.style.backgroundColor = '#f9f9f9';
+            
+            // Ícone do arquivo
+            const fileIcon = document.createElement('div');
+            fileIcon.innerHTML = '📄';
+            fileIcon.style.fontSize = '48px';
+            fileIcon.style.marginBottom = '10px';
+            
+            // Nome do arquivo
+            const fileName = document.createElement('div');
+            fileName.textContent = level.puzzle.image.split('/').pop(); // pega só o nome do arquivo
+            fileName.style.fontSize = '16px';
+            fileName.style.fontWeight = 'bold';
+            fileName.style.color = '#333';
+            fileName.style.marginBottom = '5px';
+            
+            // Texto de instrução
+            const downloadText = document.createElement('div');
+            downloadText.textContent = 'Clique para baixar';
+            downloadText.style.fontSize = '12px';
+            downloadText.style.color = '#666';
+            
+            // Efeito hover
+            fileContainer.addEventListener('mouseenter', () => {
+                fileContainer.style.backgroundColor = '#e8f4fd';
+                fileContainer.style.borderColor = '#2196F3';
+                fileContainer.style.transform = 'scale(1.05)';
+            });
+            
+            fileContainer.addEventListener('mouseleave', () => {
+                fileContainer.style.backgroundColor = '#f9f9f9';
+                fileContainer.style.borderColor = '#ccc';
+                fileContainer.style.transform = 'scale(1)';
+            });
+            
+            // Função de download
+            fileContainer.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.href = level.puzzle.image;
+                link.download = level.puzzle.image.split('/').pop();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            fileContainer.appendChild(fileIcon);
+            fileContainer.appendChild(fileName);
+            fileContainer.appendChild(downloadText);
+            imageContainer.appendChild(fileContainer);
+            imageContainer.style.display = 'flex';
+            imageContainer.style.justifyContent = 'center';
+            imageContainer.style.alignItems = 'center';
+        } else {
+            // Comportamento normal para imagens
+            const img = document.createElement('img');
+            img.src = level.puzzle.image;
+            img.alt = 'Imagem do enigma';
+            img.className = 'puzzle-image';
+            imageContainer.appendChild(img);
+            imageContainer.style.display = 'block';
+        }
+    } else if (level.puzzle.music) {
+        // Container para centralizar o áudio
+        const audioContainer = document.createElement('div');
+        audioContainer.style.display = 'flex';
+        audioContainer.style.flexDirection = 'column';
+        audioContainer.style.alignItems = 'center';
+        audioContainer.style.justifyContent = 'center';
+        audioContainer.style.width = '100%';
+        audioContainer.style.padding = '20px 0';
+        
+        // Texto explicativo
+        const audioText = document.createElement('p');
+        audioText.textContent = 'além do lcd';
+        audioText.style.textAlign = 'center';
+        audioText.style.marginBottom = '15px';
+        audioText.style.fontSize = '16px';
+        audioText.style.color = 'inherit';
+        
+        // Player de áudio
+        const audioPlayer = document.createElement('audio');
+        audioPlayer.src = level.puzzle.music;
+        audioPlayer.controls = true;
+        audioPlayer.className = 'puzzle-audio';
+        audioPlayer.style.width = '100%';
+        audioPlayer.style.maxWidth = '600px';
+        audioPlayer.style.minWidth = '400px';
+        audioPlayer.style.height = '60px';
+        audioPlayer.style.borderRadius = '8px';
+        audioPlayer.style.backgroundColor = '#f5f5f5';
+        audioPlayer.style.border = '1px solid #ddd';
+        
+        // Adiciona os elementos ao container
+        audioContainer.appendChild(audioText);
+        audioContainer.appendChild(audioPlayer);
+        
+        imageContainer.appendChild(audioContainer);
+        imageContainer.style.display = 'flex';
+        imageContainer.style.justifyContent = 'center';
+        imageContainer.style.alignItems = 'center';
+    } else {
+        imageContainer.style.display = 'none';
+    }
+
     if (level.theme !== 'hidden-image') {
         document.querySelector('.puzzle-input').value = '';
         document.querySelector('.puzzle-input').focus();
@@ -370,6 +550,15 @@ function createPath(fromLevel, toLevel) {
     }
     
     container.appendChild(path);
+}
+
+function normalize(text) {
+    return text
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+        .replace(/[^a-z0-9 ]/gi, '') // remove pontuação
+        .replace(/\s+/g, ' ') // espaços múltiplos
+        .trim();
 }
 
 async function init() {
